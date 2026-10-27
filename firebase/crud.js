@@ -1,34 +1,32 @@
+
 import { database } from "./fbConfig.js";
-import {
-    get,
-    ref,
-    push,
-    set,
-    remove,
-    update,
-    child,
- } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-database.js";
 
- const discountsRef = ref(database, "discounts");
+const discountsRef = database.ref("discounts");
 
- async function save(purchase, discount) {
-    const newItemRef = await push(discountsRef);
-    await set(newItemRef, {purchase, discount});
- }
+async function save(purchase, discount) {
+    const newItemRef = discountsRef.push();
 
- async function edit(id, purchase, discount) {
-    const itemRef = await child(discountsRef, id);
-    await update(itemRef, {purchase, discount});
- }
+    await newItemRef.set({
+        purchase,
+        discount
+    });
+}
 
- async function removeData(id) {
-    const itemRef = await child(discountsRef, id);
-    await remove(itemRef);
- }
+async function edit(id, purchase, discount) {
+    await discountsRef.child(id).update({
+        purchase,
+        discount
+    });
+}
 
- async function searchAll() {
-    const snapshot = await get(discountsRef);
+async function removeData(id) {
+    await discountsRef.child(id).remove();
+}
+
+async function searchAll() {
+    const snapshot = await discountsRef.once("value");
+
     return snapshot.exists() ? snapshot.val() : {};
- }
+}
 
- export { save, edit, removeData, searchAll };
+export { save, edit, removeData, searchAll };

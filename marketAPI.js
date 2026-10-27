@@ -11,50 +11,48 @@
 // A gerência exige que nenhum valor inválido seja aceito.
 
 import { save, edit, removeData, searchAll } from './firebase/crud.js';
+import express from 'express';
 
-const express = require('express');
 const app = express();
 const PORT = 3000;
 
 app.use(express.json());
 
 app.post('/desconto', async (req, res) => {
-  
+
     let { compra } = req.body ?? {};
-    let desconto = null;
 
     if (typeof compra !== "number" || !Number.isFinite(compra)) {
-
         return res.status(400).json({
-            erro: "O valor deve ser em números com no max 2 n° depois da vírgula.",
+            erro: "O valor deve ser numérico, com no máximo 2 casas decimais."
         });
     }
-
-    if (compra >= 500) {
-
-        desconto = compra * 0.15;
-        compra = compra - desconto;
-
+    
+    const valorOriginal = compra;
+    let desconto = 0;
+    
+    if (valorOriginal >= 500) {
+        desconto = valorOriginal * 0.15;
+    
+    } else if (valorOriginal >= 300) {
+        desconto = valorOriginal * 0.10;
+    
+    } else if (valorOriginal >= 150) {
+        desconto = valorOriginal * 0.05;
     }
-    else if (compra >= 300) {
-
-        desconto = compra * 0.10;
-        compra = compra - desconto;
-
-    } else {
-
-        desconto = compra * 0.05;
-        compra = compra - desconto;
-    }
-
-    res.json({
-        desconto: desconto,
-        valorCompra: compra,
+    
+    const valorFinal = valorOriginal - desconto;
+    
+    await save(valorOriginal, desconto);
+    
+    return res.json({
+        valorOriginal,
+        desconto,
+        valorFinal
     });
 
-    await save(valorCompra, desconto);
 });
 
 app.listen(PORT, () => {
-  console.log(`Servidor em http://localhost:${PORT}`);
+    console.log(`Servidor em http://localhost:${PORT}`);
 });
